@@ -66,6 +66,10 @@ class Snake(State):
 
     def move_snake(self, event):
         if event.key in self.keys:
+            if abs(self.dir_change[0]) == abs(self.keys[event.key][0]):
+                return True
+            if abs(self.dir_change[1]) == abs(self.keys[event.key][1]):
+                return True
             self.key_down = event.key
             self.dir_change = self.keys[event.key]
 
@@ -101,15 +105,19 @@ class Food(Snake):
         self.display.blit(image, (self.foodx, self.foody))
 
 #creates a random x, y coordinate for the food
-    def make_x_y(self):
+    def make_x_y(self, excluded_points):
         self.foodx = rand.randrange( 50, 500, 50)
         self.foody = rand.randrange( 50, 500, 50)
+        if [self.foodx, self.foody] in excluded_points:
+            self.foodx = rand.randrange( 50, 500, 50)
+            self.foody = rand.randrange( 50, 500, 50)
+            
         self.food_position = [self.foodx, self.foody]
 
-def detect_collision(snake_head, food_position):
-    if snake_head == food_position:
+def detect_collision(snake_body, food_position):
+    if snake_body[0] == food_position:
         snake.length+=1
-        food.make_x_y()
+        food.make_x_y(snake_body[1:])
 
 assets = Assets()
 snake = Snake()
@@ -129,7 +137,7 @@ def start_screen():
                 snake.move_snake(action)
                 continue
         snake.update_snake()
-        detect_collision(snake.snake_positions[0], food.food_position)
+        detect_collision(snake.snake_positions, food.food_position)
         time.sleep(.1)
         game = snake.detect_death()
         pygame.display.update()
