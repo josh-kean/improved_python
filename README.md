@@ -27,7 +27,7 @@ The "food" (next digit in Pi) is also contained in it's own class. The following
 The first step I did was to generate a dictionary of the digits in Pi mapped to their index in Pi. A dictionary was chosen to decrease the required time to access the next digit information.
 
 This was done by finding the first hundred digits in Pi online and parsing them through the following Python function;
-pi_digits = "31415..." (the actual string was excluded from this README for consistency)
+pi_digits = "31415..." (the actual string was excluded from this README for consistency)<br/>
 pi = {x: pi_digits[x] for x in range(len(pi_digits))}
 
 The result of the dictionary pi were saved in a new Python file to import into the main game file. 
