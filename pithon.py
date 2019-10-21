@@ -73,7 +73,9 @@ class Snake(State):
             self.key_down = event.key
             self.dir_change = self.keys[event.key]
 
-    def detect_death(self):
+    def detect_death(self, fake_food = [-1,-1]):
+        if self.snake_positions[0] == fake_food:
+            return False
         if self.snake_positions[0] in self.snake_positions[1:]:
             return False
         if self.snake_positions[0][0] < 0 or self.snake_positions[0][0] > self.width:
@@ -98,11 +100,28 @@ class Food(Snake):
         self.foodx = rand.randrange( 50, 500, 50)
         self.foody = rand.randrange( 50, 500, 50)
         self.food_position = [self.foodx, self.foody]
+        self.fake_x = rand.randrange(50,500,50)
+        self.fake_y = rand.randrange(50,500,50)
+        self.fake_position = [self.fake_x, self.fake_y]
+        self.fake_number = rand.randrange(1,4,1)
 
 #displays the food square onto the screen
     def make_food(self, length):
-        image = pygame.image.load(os.path.join('images', self.images[pi[length]]))
+        self.length = length
+        image = pygame.image.load(os.path.join('images', self.images[pi[self.length]]))
         self.display.blit(image, (self.foodx, self.foody))
+
+    def make_fake_food(self):
+        image = pygame.image.load(os.path.join('images', self.images[pi[self.fake_number]]))
+        self.display.blit(image, (self.fake_x, self.fake_y))
+
+    def make_fake_xy(self):
+        self.fake_x = rand.randrange(50,500,50)
+        self.fake_y = rand.randrange(50,500,50)
+        while self.fake_x == self.foodx and self.fake_y == self.foody:
+            self.fake_x = rand.randrange(50,500,50)
+            self.fake_y = rand.randrange(50,500,50)   
+        self.fake_position = [self.fake_x, self.fake_y]
 
 #creates a random x, y coordinate for the food
     def make_x_y(self, excluded_points):
@@ -111,20 +130,29 @@ class Food(Snake):
         if [self.foodx, self.foody] in excluded_points:
             self.foodx = rand.randrange( 50, 500, 50)
             self.foody = rand.randrange( 50, 500, 50)
-            
+        self.fake_number = rand.randrange(1,10,1)
+        while self.fake_number == pi[self.fake_number]:
+            self.fake_number = rand.randrange(1,10,1)
+
         self.food_position = [self.foodx, self.foody]
 
 def detect_collision(snake_body, food_position):
     if snake_body[0] == food_position:
         snake.length+=1
         food.make_x_y(snake_body[1:])
+        food.make_fake_xy()
 
 assets = Assets()
 snake = Snake()
 food = Food()
 state = State()
 
-def start_screen():
+def game_screen(mode='easy'):
+    assets.__init__()
+    state.__init__()
+    snake.__init__()
+    food.__init__()
+    game_mode = mode
     game = True
     while game:
         assets.display.fill(assets.colors['white'])
@@ -136,10 +164,38 @@ def start_screen():
             elif action.type == pygame.KEYDOWN:
                 snake.move_snake(action)
                 continue
+            else:
+                pass
         snake.update_snake()
+        if game_mode == 'hard':
+            food.make_fake_food()
+            game = snake.detect_death(food.fake_position)
+        if game_mode == 'easy':
+            game = snake.detect_death()
         detect_collision(snake.snake_positions, food.food_position)
         time.sleep(.1)
-        game = snake.detect_death()
+        pygame.display.update()
+
+def start_screen():
+    while True:
+        assets.display.fill(assets.colors['white'])
+        for action in pygame.event.get():
+            game = True
+            if action.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if action.type == pygame.KEYDOWN:
+                if action.key == pygame.K_UP:
+                    game = game_screen()
+                elif action.key == pygame.K_DOWN:
+                    game = game_screen('hard')
+                if action.key != pygame.K_UP or action.key != pygame.K_DOWN:
+                    continue
+
+        time.sleep(.1)
+        font = pygame.font.SysFont(None, 30)
+        text = font.render("Press the up arrow for easy mode, press the down arrow for hard mode", True, assets.colors['black'])
+        assets.display.blit(text, [assets.width*.1, assets.height/2])
         pygame.display.update()
 
 start_screen()
